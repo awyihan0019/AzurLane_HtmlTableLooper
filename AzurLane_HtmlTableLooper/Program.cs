@@ -15,10 +15,14 @@ namespace ConsoleApp1
             int listNum;
             listNum = getNameList();
 
-            getHtmlTableDat(listNum);
+            for (int i = 0; i < listNum; i++)
+            {
+                String nameGet = getHtmlTableDat(listNum, i);
 
-            textFilter();
+                textFilter();
 
+                Console.WriteLine(String.Format("{0,-15} | {1,-15} | {2,-15}", nameGet, "资料已读取", listNum + "/" + (i + 1)));
+            }
             Console.WriteLine("\n\n资料已读取完成!!");
             Console.ReadKey();
         }
@@ -93,7 +97,7 @@ namespace ConsoleApp1
             return count;
         }
 
-        public static void getHtmlTableDat(int listNum)
+        public static String getHtmlTableDat(int listNum, int loopTime)
         {
             int count = 0;
             String[] nameList = new String[listNum];
@@ -116,47 +120,45 @@ namespace ConsoleApp1
             //
             //set writer
             StreamWriter writer = new StreamWriter(file_demodata);
-            for (int i = 0; i < listNum; i++)
+
+            String name = nameList[loopTime];
+            //set website
+            var html2 = @"http://wiki.joyme.com/blhx/" + name;
+
+            HtmlWeb web2 = new HtmlWeb();
+
+            var htmldoc2 = web2.Load(html2);
+
+            foreach (HtmlNode nodeTF in htmldoc2.DocumentNode.SelectNodes("//table[@class='wikitable']"))
             {
-                //set website
-                var html2 = @"http://wiki.joyme.com/blhx/" + nameList[i];
-
-                HtmlWeb web2 = new HtmlWeb();
-
-                var htmldoc2 = web2.Load(html2);
-
-                foreach (HtmlNode nodeTF in htmldoc2.DocumentNode.SelectNodes("//table[@class='wikitable']"))
+                foreach (HtmlNode row in nodeTF.SelectNodes("tr"))
                 {
-                    foreach (HtmlNode row in nodeTF.SelectNodes("tr"))
-                    {
-                        HtmlNodeCollection cells = row.SelectNodes("th|td");
+                    HtmlNodeCollection cells = row.SelectNodes("th|td");
 
-                        foreach (HtmlNode cell in cells)
+                    foreach (HtmlNode cell in cells)
+                    {
+                        if (cell != null && cell.InnerText != "\n")
                         {
-                            if (cell != null && cell.InnerText != "\n")
+                            if (cell.InnerText.IndexOf("canvas") == -1)
                             {
-                                if (cell.InnerText.IndexOf("canvas") == -1)
-                                {
-                                    writer.WriteLine(cell.InnerText);
-                                    //Console.WriteLine(cell.InnerText);
-                                }
-                            }
-                            else
-                            {
-                                writer.WriteLine("-");
-                                //Console.WriteLine("-");
+                                writer.WriteLine(cell.InnerText);
+                                //Console.WriteLine(cell.InnerText);
                             }
                         }
+                        else
+                        {
+                            writer.WriteLine("-");
+                            //Console.WriteLine("-");
+                        }
                     }
-
                 }
-                Console.WriteLine(String.Format("{0,-15} | {1,-15} | {2,-15}", nameList[i], "资料已读取", listNum + "/" + (i + 1)));
 
             }
             //closs the write file
             writer.Close();
             //reformat file
             reFormatfile(file_demodata, file_demodatafixed);
+            return name;
         }
 
         public static void reFormatfile(String file_to_read, String file_to_write)
