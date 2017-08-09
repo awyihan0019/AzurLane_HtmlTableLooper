@@ -228,15 +228,19 @@ namespace ConsoleApp1
             {
                 using (StreamReader sr2 = new StreamReader(@"C:\Users\yihan\Desktop\demoDataFixed2.txt"))
                 {
-                    int count = numLine;
                     int line = 0;
                     string[] dataList = new string[numLine];
+                    String space;
+                    Console.WriteLine(numLine.ToString());
                     for (int i = 0; i < numLine; i++)
                     {
                         if (i != 22 && i != 23 && i != 24 && i != 25 && i != 35 && i != 39 && i != 43 && i != 47 && i != 51)
                         {
                             dataList[line] = sr2.ReadLine();
+                            line++;
                         }
+                        else
+                            space = sr2.ReadLine();
                     }
                     sw2.WriteLine("INSERT INTO KANTAI (name, No, lvl, type, rare, camp, buildTime, dropPoint, value, returnValue, main, sub, hp, amor, filling, atk, tAtk, agi, airDef, airAtk, compsum, speed, lvlAtk, lvlHp, lvlAirDef, lvlAgi, lvlAirAtk, lvlTAtk, star1, star2, star3, usage1, startEquip1, equipType1, usage2, startEquip2, equipType2, usage3, startEquip3, equipType3, usage4, startEquip4, equipType4, usage5, startEquip5, equipType5, skill1, skillEffect1, skill2, skillEffect2, skill3, skillEffect3) VALUES ("
                         + dataList[0] + "," + dataList[1] + "," + dataList[2] + "," + dataList[3] + "," + dataList[4] + "," + dataList[5] + "," + dataList[6] + "," + dataList[7] + "," + dataList[8] + "," + dataList[9] + ","
@@ -251,12 +255,54 @@ namespace ConsoleApp1
 
         public static void saveImage()
         {
+            StreamWriter sw2 = new StreamWriter(@"C:\Users\yihan\Desktop\imgURL.txt", true);
+
+            String url;
+            HtmlNode img;
+            String foulder = @"C:\Users\yihan\Desktop\ImageDemo\";
+
+            //declare webside
+            var html = @"http://wiki.joyme.com/blhx/%E6%89%93%E6%8D%9E%E5%88%97%E8%A1%A8";
+
+            var htmlDoc2 = new HtmlDocument();
+
+            String html2;
+
+            //create web
+            HtmlWeb web = new HtmlWeb();
+
+            //load the web
+            var htmldoc = web.Load(html);
+
+            var htmlNodes = htmldoc.DocumentNode.SelectSingleNode("//table[@id='CardSelectTr']");
+            //var htmlNodes = htmlDoc.DocumentNode.SelectNodes("//body/h1");
+            //var html = node.OuterHtml();
+            html2 = htmlNodes.InnerHtml;
+
+            htmlDoc2.LoadHtml(html2);
+            HtmlNodeCollection imageNode = htmlDoc2.DocumentNode.SelectNodes("//img");
+            for (int i = 0; i < imageNode.Count; i++)
+            {
+                url = imageNode[i].GetAttributeValue("src", null);
+                Console.WriteLine(url);
+                var client = new WebClient();
+                client.DownloadFile(url, foulder + (i+1) + ".jpg");
+                Console.WriteLine("Download successfull : " + i+1);
+            }
+        }
+
+
+        /*
+        public static void saveImage()
+        {
             int count = 0;
             var client = new WebClient();
+            string urlCheck = "";
             String url;
             HtmlNode img;
             String foulder = @"C:\Users\yihan\Desktop\ImageDemo\";
             String name = "";
+            StreamWriter sw2 = new StreamWriter(@"C:\Users\yihan\Desktop\imgURL.txt", true);
 
             //declare webside
             var html = @"http://wiki.joyme.com/blhx/%E6%89%93%E6%8D%9E%E5%88%97%E8%A1%A8";
@@ -306,14 +352,27 @@ namespace ConsoleApp1
                         {
                             img = cells[k].SelectSingleNode("//img");
                             url = img.GetAttributeValue("src", null);
-                            Console.WriteLine(url);
-                            client.DownloadFile(url, foulder + numbersRead + ".png");
-                            Console.WriteLine("Download successfull : " + numbersRead);
-                            numbersRead++;
+                            if (url != urlCheck)
+                            {
+                                Console.WriteLine(url);
+                                urlCheck = url;
+                            }
+                            else
+                                continue;
+                            //sw2.Write(partHTML);
+                            /*
+                              img = row.SelectSingleNode("//img");
+                              url = img.GetAttributeValue("src", null);
+                              Console.WriteLine(url);
+                              client.DownloadFile(url, foulder + numbersRead + ".jpg");
+                              Console.WriteLine("Download successfull : " + numbersRead);
+                              numbersRead++;
+                              
                         }
                     }
                 }
             }
-        }
+            sw2.Close();
+        }*/
     }
 }
