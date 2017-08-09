@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using System.Net;
 
 namespace ConsoleApp1
 {
@@ -12,17 +13,21 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
-            int listNum;
+            /*
+            int listNum, NumLines;
             listNum = getNameList();
 
             for (int i = 0; i < listNum; i++)
             {
                 String nameGet = getHtmlTableDat(listNum, i);
 
-                textFilter();
-
+                NumLines = textFilter();
+                generateSQL(NumLines);
                 Console.WriteLine(String.Format("{0,-15} | {1,-15} | {2,-15}", nameGet, "资料已读取", listNum + "/" + (i + 1)));
             }
+            */
+            saveImage();
+
             Console.WriteLine("\n\n资料已读取完成!!");
             Console.ReadKey();
         }
@@ -79,9 +84,9 @@ namespace ConsoleApp1
                         String data = cells[k].InnerText;
                         if (k == 1)
                         {
-                            //writeForFile(data);
+                            //writeForFile(data); :for testing output purpose
                             writer.WriteLine(data);
-                            //Console.WriteLine(data);
+                            //Console.WriteLine(data); :for testing output purpose
                             Console.WriteLine("已读取数量 ：" + numbersRead);
                             numbersRead++;
                         }
@@ -142,13 +147,13 @@ namespace ConsoleApp1
                             if (cell.InnerText.IndexOf("canvas") == -1)
                             {
                                 writer.WriteLine(cell.InnerText);
-                                //Console.WriteLine(cell.InnerText);
+                                //Console.WriteLine(cell.InnerText); :for testing output purpose
                             }
                         }
                         else
                         {
                             writer.WriteLine("-");
-                            //Console.WriteLine("-");
+                            //Console.WriteLine("-"); :for testing output purpose
                         }
                     }
                 }
@@ -179,25 +184,28 @@ namespace ConsoleApp1
             }
         }
 
-        public static void textFilter()
+        public static int textFilter()
         {
             using (StreamWriter sw2 = new StreamWriter(@"C:\Users\yihan\Desktop\demoDataFixed2.txt", false))
             {
                 using (StreamReader sr2 = new StreamReader(@"C:\Users\yihan\Desktop\demoDataFixed.txt"))
                 {
+                    int count = 0;
                     while (sr2.Peek() >= 0)
                     {
                         String strReadLine = sr2.ReadLine();
                         bool check = skippingWord(strReadLine);
                         if (strReadLine == "前排三破弹幕或后排专属弹幕")
                         {
-                            break;
+                            return count;
                         }
                         if (check == true)
                         {
                             sw2.WriteLine(strReadLine);
+                            count++;
                         }
                     }
+                    return count;
                 }
 
 
@@ -206,12 +214,165 @@ namespace ConsoleApp1
 
         public static bool skippingWord(String word)
         {
-            if (word != "编号" && word != "初始星级" && word != "类型" && word != "稀有度" && word != "阵营" && word != "耗时" && word != "掉落点" && word != "营养价值" && word != "退役收益" && word != "主分类" && word != "次分类" && word != "性能" && word != "canvas" && word != "炮击" && word != "耐久" && word != "防空" && word != "机动" && word != "航空" && word != "雷击" && word != "初始属性/满级满破满强化好感度爱属性(婚初始属性除以1.06再乘以1.09)" && word != "耐久" && word != "装甲" && word != "装填" && word != "消耗" && word != "航速" && word != "突破升星效果" && word != "防空" && word != "航空" && word != "突破升星效果" && word != "一阶" && word != "二阶" && word != "三阶" && word != "槽位/武器效率/初始装备/可装备" && word != "槽位" && word != "效率（初始/满破）" && word != "初始装备" && word != "可装备")
+            if (word != "编号" && word != "初始星级" && word != "类型" && word != "稀有度" && word != "阵营" && word != "耗时" && word != "掉落点" && word != "营养价值" && word != "退役收益" && word != "主分类" && word != "次分类" && word != "性能" && word != "canvas" && word != "炮击" && word != "耐久" && word != "防空" && word != "机动" && word != "航空" && word != "雷击" && word != "初始属性/满级满破满强化好感度爱属性(婚初始属性除以1.06再乘以1.09)" && word != "耐久" && word != "装甲" && word != "装填" && word != "消耗" && word != "航速" && word != "突破升星效果" && word != "防空" && word != "航空" && word != "突破升星效果" && word != "一阶" && word != "二阶" && word != "三阶" && word != "槽位/武器效率/初始装备/可装备" && word != "槽位" && word != "效率（初始/满破）" && word != "初始装备" && word != "可装备" && word != "技能" && word != "装备说明")
             {
                 return true;
             }
             else
                 return false;
         }
+
+        public static void generateSQL(int numLine)
+        {
+            using (StreamWriter sw2 = new StreamWriter(@"C:\Users\yihan\Desktop\database.txt", true))
+            {
+                using (StreamReader sr2 = new StreamReader(@"C:\Users\yihan\Desktop\demoDataFixed2.txt"))
+                {
+                    int line = 0;
+                    string[] dataList = new string[numLine];
+                    String space;
+                    Console.WriteLine(numLine.ToString());
+                    for (int i = 0; i < numLine; i++)
+                    {
+                        if (i != 22 && i != 23 && i != 24 && i != 25 && i != 35 && i != 39 && i != 43 && i != 47 && i != 51)
+                        {
+                            dataList[line] = sr2.ReadLine();
+                            line++;
+                        }
+                        else
+                            space = sr2.ReadLine();
+                    }
+                    sw2.WriteLine("INSERT INTO KANTAI (name, No, lvl, type, rare, camp, buildTime, dropPoint, value, returnValue, main, sub, hp, amor, filling, atk, tAtk, agi, airDef, airAtk, compsum, speed, lvlAtk, lvlHp, lvlAirDef, lvlAgi, lvlAirAtk, lvlTAtk, star1, star2, star3, usage1, startEquip1, equipType1, usage2, startEquip2, equipType2, usage3, startEquip3, equipType3, usage4, startEquip4, equipType4, usage5, startEquip5, equipType5, skill1, skillEffect1, skill2, skillEffect2, skill3, skillEffect3) VALUES ("
+                        + dataList[0] + "," + dataList[1] + "," + dataList[2] + "," + dataList[3] + "," + dataList[4] + "," + dataList[5] + "," + dataList[6] + "," + dataList[7] + "," + dataList[8] + "," + dataList[9] + ","
+                        + dataList[10] + "," + dataList[11] + "," + dataList[12] + "," + dataList[13] + "," + dataList[14] + "," + dataList[15] + "," + dataList[16] + "," + dataList[17] + "," + dataList[18] + "," + dataList[19] + ","
+                        + dataList[20] + "," + dataList[21] + "," + dataList[22] + "," + dataList[23] + "," + dataList[24] + "," + dataList[25] + "," + dataList[26] + "," + dataList[27] + "," + dataList[28] + "," + dataList[29] + ","
+                        + dataList[30] + "," + dataList[31] + "," + dataList[32] + "," + dataList[33] + "," + dataList[34] + "," + dataList[35] + "," + dataList[36] + "," + dataList[37] + "," + dataList[38] + "," + dataList[39] + ","
+                        + dataList[40] + "," + dataList[41] + "," + dataList[42] + "," + dataList[43] + "," + dataList[44] + "," + dataList[45] + "," + dataList[46] + "," + dataList[47] + "," + dataList[48] + "," + dataList[49] + ","
+                        + dataList[50] + "," + dataList[51] + ");");
+                }
+            }
+        }
+
+        public static void saveImage()
+        {
+            StreamWriter sw2 = new StreamWriter(@"C:\Users\yihan\Desktop\imgURL.txt", true);
+
+            String url;
+            HtmlNode img;
+            String foulder = @"C:\Users\yihan\Desktop\ImageDemo\";
+
+            //declare webside
+            var html = @"http://wiki.joyme.com/blhx/%E6%89%93%E6%8D%9E%E5%88%97%E8%A1%A8";
+
+            var htmlDoc2 = new HtmlDocument();
+
+            String html2;
+
+            //create web
+            HtmlWeb web = new HtmlWeb();
+
+            //load the web
+            var htmldoc = web.Load(html);
+
+            var htmlNodes = htmldoc.DocumentNode.SelectSingleNode("//table[@id='CardSelectTr']");
+            //var htmlNodes = htmlDoc.DocumentNode.SelectNodes("//body/h1");
+            //var html = node.OuterHtml();
+            html2 = htmlNodes.InnerHtml;
+
+            htmlDoc2.LoadHtml(html2);
+            HtmlNodeCollection imageNode = htmlDoc2.DocumentNode.SelectNodes("//img");
+            for (int i = 0; i < imageNode.Count; i++)
+            {
+                url = imageNode[i].GetAttributeValue("src", null);
+                Console.WriteLine(url);
+                var client = new WebClient();
+                client.DownloadFile(url, foulder + (i+1) + ".jpg");
+                Console.WriteLine("Download successfull : " + i+1);
+            }
+        }
+
+
+        /*
+        public static void saveImage()
+        {
+            int count = 0;
+            var client = new WebClient();
+            string urlCheck = "";
+            String url;
+            HtmlNode img;
+            String foulder = @"C:\Users\yihan\Desktop\ImageDemo\";
+            String name = "";
+            StreamWriter sw2 = new StreamWriter(@"C:\Users\yihan\Desktop\imgURL.txt", true);
+
+            //declare webside
+            var html = @"http://wiki.joyme.com/blhx/%E6%89%93%E6%8D%9E%E5%88%97%E8%A1%A8";
+
+            //create web
+            HtmlWeb web = new HtmlWeb();
+
+            //load the web
+            var htmldoc = web.Load(html);            
+
+            int numbersRead = 1;
+
+            //skip firts row
+            bool firstRowIsSkipped = false;
+
+            //getting the node
+            HtmlNodeCollection node = htmldoc.DocumentNode.SelectNodes("//table[@id='CardSelectTr']");
+
+
+            foreach (HtmlNode table in node)
+            {
+
+                foreach (HtmlNode row in table.SelectNodes("tr"))
+                {
+                    count = table.SelectNodes("tr").Count;
+                    count--;
+                    if (firstRowIsSkipped == false)
+                    {  //skip one row for the table header
+                        firstRowIsSkipped = true;
+                        continue;
+                    }
+                    HtmlNodeCollection cells = row.SelectNodes("th|td");
+
+                    if (cells == null)
+                    {
+                        continue;
+                    }
+                    for (var k = 0; k < cells.Count; k++)
+                    {
+                        String data = cells[k].InnerText;
+                        if (k == 0)
+                        {
+                            name = data;
+                            Console.WriteLine(data);
+                        }
+                        if (k == 1)
+                        {
+                            img = cells[k].SelectSingleNode("//img");
+                            url = img.GetAttributeValue("src", null);
+                            if (url != urlCheck)
+                            {
+                                Console.WriteLine(url);
+                                urlCheck = url;
+                            }
+                            else
+                                continue;
+                            //sw2.Write(partHTML);
+                            /*
+                              img = row.SelectSingleNode("//img");
+                              url = img.GetAttributeValue("src", null);
+                              Console.WriteLine(url);
+                              client.DownloadFile(url, foulder + numbersRead + ".jpg");
+                              Console.WriteLine("Download successfull : " + numbersRead);
+                              numbersRead++;
+                              
+                        }
+                    }
+                }
+            }
+            sw2.Close();
+        }*/
     }
 }
